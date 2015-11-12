@@ -14,8 +14,20 @@ sub _set_entry_prefs {
         if ( $app->mode eq 'save_entry_prefs' ) {
             my $_type = $app->param( '_type' );
             require MT::Permission;
-            my @perms = MT::Permission->load( { blog_id => $obj->blog_id,
-                                                author_id => { not => $obj->author_id } } );
+            my @perms = MT::Permission->load(
+                {
+                    blog_id => $obj->blog_id,
+                    author_id => { not => $obj->author_id },
+                    permissions => { not => "'comment'" }
+                },
+                {
+                    join => ['MT::Author', undef, {
+                        id => \('= ' . MT::Permission->datasource . '_author_id'),
+                        # type => MT::Author::AUTHOR(),
+                        status => MT::Author::ACTIVE()
+                    }]
+                }
+            );
             for my $p ( @perms ) {
                 if ( $_type eq 'page' ) {
                     $p->page_prefs( $obj->page_prefs );
